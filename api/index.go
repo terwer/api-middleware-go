@@ -43,7 +43,6 @@ func handleMarkdown(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "%s", resultBytes)
 		return
 	}
-	fmt.Fprintf(w, "md: %s\n", requestBody.Md)
 
 	luteEngine := lute.New()
 	html := luteEngine.MarkdownStr("terwer", requestBody.Md)
