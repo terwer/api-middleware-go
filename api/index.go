@@ -3,7 +3,10 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"github.com/88250/gulu"
+	"github.com/88250/lute"
+	"github.com/bytedance/sonic"
+	"io"
 	"net/http"
 )
 
@@ -19,7 +22,10 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, err := ioutil.ReadAll(r.Body)
+	// get post parameters
+	// 50MB 最大大小
+	maxBodySize := int64(50 * 1024 * 1024)
+	body, err := io.ReadAll(io.LimitReader(r.Body, maxBodySize))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "Error reading request body")
@@ -33,29 +39,18 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Error parsing JSON request body")
 		return
 	}
-
 	fmt.Fprintf(w, "md: %s\n", requestBody.Md)
 
-	//// get post parameters
-	//err := r.ParseForm()
-	//if err != nil {
-	//	fmt.Println("ParseForm Error: ", err)
-	//}
-	//
-	//name := r.PostFormValue("name")
-	//age := r.PostFormValue("age")
-	//fmt.Fprintf(w, "Name: %s\nAge: %s\n", name, age)
-	//
-	//luteEngine := lute.New() // 默认已经启用 GFM 支持以及中文语境优化
-	//html := luteEngine.MarkdownStr("terwer", "**Lute** - A structured markdown engine.")
-	//
-	//ret := gulu.Ret.NewResult()
-	//ret.Data = html
-	//
-	//// Marshal
-	//output, err := sonic.Marshal(&ret)
-	//if err != nil {
-	//	ret.Msg = err.Error()
-	//}
-	//fmt.Fprintf(w, string(output))
+	luteEngine := lute.New() // 默认已经启用 GFM 支持以及中文语境优化
+	html := luteEngine.MarkdownStr("terwer", "**Lute** - A structured markdown engine.")
+
+	ret := gulu.Ret.NewResult()
+	ret.Data = html
+
+	// Marshal
+	output, err := sonic.Marshal(&ret)
+	if err != nil {
+		ret.Msg = err.Error()
+	}
+	fmt.Fprintf(w, string(output))
 }
